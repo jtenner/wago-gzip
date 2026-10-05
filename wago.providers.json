@@ -1,0 +1,79 @@
+{
+  "$schema": "https://wago.sh/v1/providers.schema.json",
+  "providers": [
+    {
+      "importPath": "github.com/jtenner/wago-gzip/register",
+      "definition": {
+        "id": "github.com/jtenner/wago-gzip",
+        "name": "Gzip",
+        "version": "0.0.0",
+        "description": "Bounded RFC 1952 gzip compression for GC, Wasm32, and Wasm64 guests",
+        "stability": "experimental",
+        "compatibility": {
+          "engines": {
+            "wago": "\u003e=0.1.0-beta.11"
+          }
+        },
+        "provenance": {
+          "repository": "https://github.com/jtenner/wago-gzip",
+          "license": "Apache-2.0",
+          "authors": [
+            "jtenner"
+          ]
+        },
+        "authorities": [
+          {
+            "name": "host.import.define",
+            "mode": "required",
+            "reason": "Define bounded gzip codec imports",
+            "scope": {
+              "modules": [
+                "gzip.gc",
+                "gzip.wasm32",
+                "gzip.wasm64"
+              ]
+            }
+          }
+        ],
+        "configSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "max_concurrent_operations": {
+              "default": 2,
+              "maximum": 8,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "max_input_bytes": {
+              "default": 8388608,
+              "maximum": 67108864,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "max_members": {
+              "default": 1024,
+              "maximum": 65536,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "max_metadata_bytes": {
+              "default": 65536,
+              "maximum": 1048576,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "max_output_bytes": {
+              "default": 33554432,
+              "maximum": 67108864,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "definitionDigest": "sha256:372bc12cefbe48ec600b97bff019000d8a1c3e32838985a60d39f8297caca872"
+    }
+  ]
+}

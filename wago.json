@@ -1,0 +1,17 @@
+{
+  "$schema": "https://wago.sh/v1/schema.json",
+  "plugins": {},
+  "package": {
+    "module": "github.com/jtenner/wago-gzip",
+    "version": "0.0.0",
+    "name": "Gzip",
+    "description": "Bounded RFC 1952 gzip compression for GC, Wasm32, and Wasm64 guests",
+    "stability": "experimental",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/jtenner/wago-gzip",
+    "authors": [{"name": "jtenner"}],
+    "engines": {"wago": ">=0.1.0-beta.11"},
+    "category": "compression",
+    "tags": ["gzip", "compression", "wasmgc", "wasm32", "wasm64"]
+  }
+}

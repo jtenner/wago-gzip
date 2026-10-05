@@ -11,11 +11,35 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v6
         with:
           go-version-file: go.mod
           cache: true
       - run: test -z "$(gofmt -l .)"
       - run: go vet ./...
       - run: go test -race ./...
+
+  tinygo:
+    name: TinyGo host integration / Wasm32, Wasm64, WasmGC
+    runs-on: ubuntu-24.04
+    env:
+      GOMAXPROCS: "2"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v6
+        with:
+          go-version: "1.27.1"
+          cache: true
+      - uses: acifani/setup-tinygo@db56321a62b9a67922bb9ac8f9d085e218807bb3 # v2
+        with:
+          tinygo-version: "0.42.0"
+          install-binaryen: false
+      - name: Apply Wago-pinned TinyGo scheduler fix
+        run: ./scripts/patch-tinygo-042.sh
+      - name: Install TinyGo native linker
+        run: sudo apt-get update && sudo apt-get install -y lld
+      - name: Verify TinyGo-produced guest scope
+        run: ./scripts/verify-tinygo-guests.sh
+      - name: Execute codec and every ABI in a TinyGo host
+        run: tinygo test -v -scheduler=tasks -p=2 -tags=tinygo_qualification ./...

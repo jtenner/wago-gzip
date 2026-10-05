@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add dedicated pinned TinyGo host CI that executes the codec and Wasm32,
+  Wasm64, and WasmGC integrations, including checksum and bounds failures.
+- Record TinyGo 0.42.0 guest-generation limits explicitly: Wasm32 only, and
+  multi-result codec imports are not yet accepted by `//go:wasmimport`.
+
 ## v0.0.0
 
 Experimental publication-test release.

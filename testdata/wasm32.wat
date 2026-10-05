@@ -70,4 +70,27 @@
 
   (func (export "bounds_failure") (result i32 i32)
     i32.const 65535 i32.const 2 i32.const 1024 i32.const 64 i32.const -1
-    call $compress))
+    call $compress)
+
+  (func (export "checksum_failure") (result i32 i32 i32)
+    (local $compressed i32)
+    (local $checksum i32)
+    (local $status i32)
+    (local $written i32)
+    i32.const 0 i32.const 8 i32.const 1024 i32.const 1024 i32.const -1
+    call $compress
+    local.set $compressed
+    drop
+    i32.const 1024 local.get $compressed i32.add i32.const 8 i32.sub
+    local.set $checksum
+    local.get $checksum
+    local.get $checksum i32.load8_u i32.const 1 i32.xor
+    i32.store8
+    i32.const 3000 i32.const 170 i32.store8
+    i32.const 1024 local.get $compressed i32.const 3000 i32.const 1024
+    call $decompress
+    local.set $written
+    local.set $status
+    local.get $status
+    local.get $written
+    i32.const 3000 i32.load8_u))

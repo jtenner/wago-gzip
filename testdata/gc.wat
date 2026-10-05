@@ -119,4 +119,36 @@
     i32.const 64 array.new_default $bytes local.set $destination
     local.get $source i32.const 0 i32.const 8
     local.get $destination i32.const 0 i32.const 64 i32.const -1
-    call $compress))
+    call $compress)
+
+  (func (export "checksum_failure") (result i32 i32 i32)
+    (local $source (ref $bytes))
+    (local $compressed_array (ref $bytes))
+    (local $plain_array (ref $bytes))
+    (local $compressed i32)
+    (local $checksum i32)
+    (local $status i32)
+    (local $written i32)
+    call $new_source local.set $source
+    i32.const 1024 array.new_default $bytes local.set $compressed_array
+    i32.const 1024 array.new_default $bytes local.set $plain_array
+    local.get $plain_array i32.const 0 i32.const 170 array.set $bytes
+    local.get $source i32.const 0 i32.const 8
+    local.get $compressed_array i32.const 0 i32.const 1024 i32.const -1
+    call $compress
+    local.set $compressed
+    drop
+    local.get $compressed i32.const 8 i32.sub local.set $checksum
+    local.get $compressed_array
+    local.get $checksum
+    local.get $compressed_array local.get $checksum array.get_u $bytes
+    i32.const 1 i32.xor
+    array.set $bytes
+    local.get $compressed_array i32.const 0 local.get $compressed
+    local.get $plain_array i32.const 0 i32.const 1024
+    call $decompress
+    local.set $written
+    local.set $status
+    local.get $status
+    local.get $written
+    local.get $plain_array i32.const 0 array.get_u $bytes))

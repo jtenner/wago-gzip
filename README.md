@@ -167,6 +167,26 @@ wasm-tools parse testdata/wasm64.wat -o testdata/wasm64.wasm
 wasm-tools parse testdata/gc.wat -o testdata/gc.wasm
 ```
 
+### TinyGo qualification
+
+The dedicated `TinyGo host integration / Wasm32, Wasm64, WasmGC` CI job pins
+TinyGo 0.42.0 with Go 1.27.1 on Linux/amd64 and applies the exact upstream task
+scheduler fix used by the pinned Wago dependency. It uses Wago's required
+`-scheduler=tasks` host setting and executes the complete codec suite plus real
+round-trip, overlap, output-small atomicity, bounds, checksum, Wasm64-width, and
+WasmGC-type checks for all three plugin namespaces. This qualifies a
+**TinyGo-compiled host**; the guest modules for those tests remain the checked-in
+WAT fixtures.
+
+TinyGo-produced guests have a narrower, separately tested scope. TinyGo 0.42.0
+offers Wasm32 targets only. A generated Wasm32 guest successfully imports and
+executes the single-result `abi_version` function, but TinyGo rejects the
+two-result `compress` and `decompress` imports with `too many return values`.
+It has no Wasm64 or WasmGC output target. CI asserts each limitation explicitly,
+so guest compilation is neither mistaken for host qualification nor silently
+skipped. A future guest-compatible ABI extension could add single-result packed
+status/written entry points without changing the current common ABI.
+
 ## License
 
 Project code is Apache-2.0. Go standard-library attribution is recorded in

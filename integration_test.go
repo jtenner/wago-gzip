@@ -19,6 +19,11 @@ func integrationFixture(t *testing.T, mode string) *wago.Instance {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return integrationGuest(t, guest)
+}
+
+func integrationGuest(t *testing.T, guest []byte) *wago.Instance {
+	t.Helper()
 	runtime := wago.NewRuntime(wago.WithRuntimeConfig(wago.NewRuntimeConfig().WithCoreFeatures(wago.CoreFeaturesV3)))
 	t.Cleanup(func() {
 		if err := runtime.Close(); err != nil {
@@ -93,6 +98,10 @@ func TestWagoABIsOverlapBoundsAndFailureAtomicity(t *testing.T) {
 			result = invokeIntegration(t, instance, "bounds_failure")
 			if len(result) != 2 || result[0] != uint64(StatusInvalidArgument) || result[1] != 0 {
 				t.Fatalf("bounds failure = %v", result)
+			}
+			result = invokeIntegration(t, instance, "checksum_failure")
+			if len(result) != 3 || result[0] != uint64(StatusChecksumMismatch) || result[1] != 0 || result[2] != 170 {
+				t.Fatalf("checksum failure = %v", result)
 			}
 		})
 	}

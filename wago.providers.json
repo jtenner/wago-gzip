@@ -6,7 +6,7 @@
       "definition": {
         "id": "github.com/jtenner/wago-gzip",
         "name": "Gzip",
-        "version": "0.0.0",
+        "version": "0.0.1",
         "description": "Bounded RFC 1952 gzip compression for GC, Wasm32, and Wasm64 guests",
         "stability": "experimental",
         "compatibility": {
@@ -73,7 +73,7 @@
           "type": "object"
         }
       },
-      "definitionDigest": "sha256:372bc12cefbe48ec600b97bff019000d8a1c3e32838985a60d39f8297caca872"
+      "definitionDigest": "sha256:f5a8dcdccacbeb4cbb8a22f99a4bd5bf7019e945499aaf09376e135990a38ba9"
     }
   ]
 }

@@ -67,6 +67,9 @@ func TestWagoABIsRoundTrip(t *testing.T) {
 				result[2] != uint64(StatusOK) || result[3] != 8 || result[4] != 'g' || result[5] != 'g' {
 				t.Fatalf("roundtrip = %v", result)
 			}
+			if result = invokeIntegration(t, instance, "packed_parity"); len(result) != 1 || result[0] != 1 {
+				t.Fatalf("packed parity = %v", result)
+			}
 		})
 	}
 

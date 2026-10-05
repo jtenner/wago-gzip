@@ -18,6 +18,11 @@ tinygo build \
 	-o testdata/tinygo-wasm32-version.generated.wasm \
 	./testdata/tinygo-wasm32-version
 
+tinygo build \
+	-target=wasm-unknown -scheduler=none -gc=leaking -no-debug -p=2 \
+	-o testdata/tinygo-wasm32-packed.generated.wasm \
+	./testdata/tinygo-wasm32-packed
+
 qualify_temp="$(mktemp -d)"
 set +e
 qualify_output="$(tinygo build \
@@ -37,4 +42,4 @@ if ! grep -Fq "too many return values" <<<"$qualify_output"; then
 	exit 1
 fi
 
-echo "TinyGo guest scope: Wasm32 single-result imports execute; codec multi-result imports, Wasm64, and WasmGC generation are unsupported by TinyGo 0.42.0."
+echo "TinyGo guest scope: Wasm32 packed codec imports execute; legacy multi-result codec imports, Wasm64, and WasmGC generation are unsupported by TinyGo 0.42.0."

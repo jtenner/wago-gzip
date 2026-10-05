@@ -1,11 +1,15 @@
 # Changelog
 
-## Unreleased
+## v0.0.1 — 2026-10-05
 
+- Add single-result `compress_packed` and `decompress_packed` ABI v1 adapters
+  for TinyGo-produced Wasm32 guests while retaining the legacy multi-result
+  functions.
+- Qualify a real TinyGo 0.42.0 guest in Go and TinyGo hosts.
 - Add dedicated pinned TinyGo host CI that executes the codec and Wasm32,
   Wasm64, and WasmGC integrations, including checksum and bounds failures.
-- Record TinyGo 0.42.0 guest-generation limits explicitly: Wasm32 only, and
-  multi-result codec imports are not yet accepted by `//go:wasmimport`.
+- Record the remaining TinyGo 0.42.0 guest-generation limits explicitly:
+  Wasm32 only, with legacy multi-result imports still rejected.
 
 ## v0.0.0
 

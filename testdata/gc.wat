@@ -4,6 +4,10 @@
     (func $compress (param anyref i32 i32 anyref i32 i32 i32) (result i32 i32)))
   (import "gzip.gc" "decompress"
     (func $decompress (param anyref i32 i32 anyref i32 i32) (result i32 i32)))
+  (import "gzip.gc" "compress_packed"
+    (func $compress_packed (param anyref i32 i32 anyref i32 i32 i32) (result i64)))
+  (import "gzip.gc" "decompress_packed"
+    (func $decompress_packed (param anyref i32 i32 anyref i32 i32) (result i64)))
   (type $bytes (array (mut i8)))
   (type $words (array (mut i32)))
 
@@ -151,4 +155,55 @@
     local.set $status
     local.get $status
     local.get $written
-    local.get $plain_array i32.const 0 array.get_u $bytes))
+    local.get $plain_array i32.const 0 array.get_u $bytes)
+
+  (func (export "packed_parity") (result i32)
+    (local $source (ref $bytes))
+    (local $legacy_compressed (ref $bytes))
+    (local $packed_compressed (ref $bytes))
+    (local $legacy_plain (ref $bytes))
+    (local $packed_plain (ref $bytes))
+    (local $status i32)
+    (local $written i32)
+    (local $packed i64)
+    (local $ok i32)
+    call $new_source local.set $source
+    i32.const 1024 array.new_default $bytes local.set $legacy_compressed
+    i32.const 1024 array.new_default $bytes local.set $packed_compressed
+    i32.const 1024 array.new_default $bytes local.set $legacy_plain
+    i32.const 1024 array.new_default $bytes local.set $packed_plain
+    local.get $source i32.const 0 i32.const 8
+    local.get $legacy_compressed i32.const 0 i32.const 1024 i32.const -1
+    call $compress
+    local.set $written
+    local.set $status
+    local.get $source i32.const 0 i32.const 8
+    local.get $packed_compressed i32.const 0 i32.const 1024 i32.const -1
+    call $compress_packed
+    local.set $packed
+    local.get $status local.get $packed i32.wrap_i64 i32.eq
+    local.get $written local.get $packed i64.const 32 i64.shr_u i32.wrap_i64 i32.eq
+    i32.and
+    local.get $status i32.eqz i32.and
+    local.get $written i32.const 0 i32.gt_u i32.and
+    local.set $ok
+    local.get $legacy_compressed i32.const 0 local.get $written
+    local.get $legacy_plain i32.const 0 i32.const 1024
+    call $decompress
+    local.set $written
+    local.set $status
+    local.get $packed_compressed i32.const 0
+    local.get $packed i64.const 32 i64.shr_u i32.wrap_i64
+    local.get $packed_plain i32.const 0 i32.const 1024
+    call $decompress_packed
+    local.set $packed
+    local.get $ok
+    local.get $status local.get $packed i32.wrap_i64 i32.eq
+    i32.and
+    local.get $written local.get $packed i64.const 32 i64.shr_u i32.wrap_i64 i32.eq
+    i32.and
+    local.get $status i32.eqz i32.and
+    local.get $written i32.const 8 i32.eq i32.and
+    local.get $legacy_plain i32.const 0 array.get_u $bytes
+    local.get $packed_plain i32.const 0 array.get_u $bytes i32.eq
+    i32.and))

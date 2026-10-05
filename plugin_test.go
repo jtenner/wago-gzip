@@ -6,6 +6,28 @@ import (
 	"time"
 )
 
+func TestPackResult(t *testing.T) {
+	tests := []struct {
+		status  Status
+		written int32
+		want    uint64
+	}{
+		{StatusOK, 17, uint64(17) << 32},
+		{StatusOutputTooSmall, 17, uint64(StatusOutputTooSmall)},
+		{StatusOK, -1, uint64(StatusInternalError)},
+	}
+	for _, test := range tests {
+		if got := uint64(packResult(test.status, test.written)); got != test.want {
+			t.Errorf("packResult(%v, %d) = %#x, want %#x", test.status, test.written, got, test.want)
+		}
+	}
+	for status := StatusInvalidArgument; status <= StatusInternalError; status++ {
+		if got := uint64(packResult(status, 17)); got != uint64(uint32(status)) {
+			t.Errorf("packResult(%v, 17) = %#x; failure must have written=0", status, got)
+		}
+	}
+}
+
 func TestProviderAndPluginSet(t *testing.T) {
 	provider := Provider()
 	if provider.Definition.ID != PluginID || provider.Definition.Provenance.License != "Apache-2.0" {

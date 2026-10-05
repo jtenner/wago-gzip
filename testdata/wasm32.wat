@@ -4,6 +4,10 @@
     (func $compress (param i32 i32 i32 i32 i32) (result i32 i32)))
   (import "gzip.wasm32" "decompress"
     (func $decompress (param i32 i32 i32 i32) (result i32 i32)))
+  (import "gzip.wasm32" "compress_packed"
+    (func $compress_packed (param i32 i32 i32 i32 i32) (result i64)))
+  (import "gzip.wasm32" "decompress_packed"
+    (func $decompress_packed (param i32 i32 i32 i32) (result i64)))
   (memory 1)
   (data (i32.const 0) "gzip-wag")
 
@@ -93,4 +97,40 @@
     local.set $status
     local.get $status
     local.get $written
-    i32.const 3000 i32.load8_u))
+    i32.const 3000 i32.load8_u)
+
+  (func (export "packed_parity") (result i32)
+    (local $status i32)
+    (local $written i32)
+    (local $packed i64)
+    (local $ok i32)
+    i32.const 0 i32.const 8 i32.const 1024 i32.const 1024 i32.const -1
+    call $compress
+    local.set $written
+    local.set $status
+    i32.const 0 i32.const 8 i32.const 2048 i32.const 1024 i32.const -1
+    call $compress_packed
+    local.set $packed
+    local.get $status local.get $packed i32.wrap_i64 i32.eq
+    local.get $written local.get $packed i64.const 32 i64.shr_u i32.wrap_i64 i32.eq
+    i32.and
+    local.get $status i32.eqz i32.and
+    local.get $written i32.const 0 i32.gt_u i32.and
+    local.set $ok
+    i32.const 1024 local.get $written i32.const 3072 i32.const 1024
+    call $decompress
+    local.set $written
+    local.set $status
+    i32.const 2048 local.get $packed i64.const 32 i64.shr_u i32.wrap_i64
+    i32.const 4096 i32.const 1024
+    call $decompress_packed
+    local.set $packed
+    local.get $ok
+    local.get $status local.get $packed i32.wrap_i64 i32.eq
+    i32.and
+    local.get $written local.get $packed i64.const 32 i64.shr_u i32.wrap_i64 i32.eq
+    i32.and
+    local.get $status i32.eqz i32.and
+    local.get $written i32.const 8 i32.eq i32.and
+    i32.const 3072 i32.load8_u i32.const 4096 i32.load8_u i32.eq
+    i32.and))

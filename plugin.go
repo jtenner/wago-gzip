@@ -52,7 +52,7 @@ func Provider() wago.PluginProvider {
 	definition := wago.PluginDefinition{
 		ID:          PluginID,
 		Name:        "Gzip",
-		Version:     "0.0.0",
+		Version:     "0.0.1",
 		Description: "Bounded RFC 1952 gzip compression for GC, Wasm32, and Wasm64 guests",
 		Stability:   wago.Experimental,
 		Compatibility: wago.Compatibility{
@@ -155,6 +155,14 @@ func (p *Plugin) Register(registrar *wago.Registrar) error {
 			p.invoke(caller, call, mode, false)
 		}).Params(decompressParams...).Results(wago.ValI32, wago.ValI32).
 			Docs("decompress and verify one or more RFC 1952 members")
+		imports.HostFunc(binding.module, "compress_packed", func(caller wago.Caller, call wago.HostCall) {
+			p.invokePacked(caller, call, mode, true)
+		}).Params(compressParams...).Results(wago.ValI64).
+			Docs("compress and pack status in low 32 bits and written in high 32 bits")
+		imports.HostFunc(binding.module, "decompress_packed", func(caller wago.Caller, call wago.HostCall) {
+			p.invokePacked(caller, call, mode, false)
+		}).Params(decompressParams...).Results(wago.ValI64).
+			Docs("decompress and pack status in low 32 bits and written in high 32 bits")
 	}
 	return registrar.Lifecycle(wago.PluginLifecycle{Stop: func(context.Context) error {
 		p.Close()
@@ -286,6 +294,32 @@ func (p *Plugin) invoke(caller wago.Caller, call wago.HostCall, mode transport, 
 
 	operation := parseRequest(call, mode, compress)
 	status, written = p.execute(caller, operation, compress)
+}
+
+func (p *Plugin) invokePacked(caller wago.Caller, call wago.HostCall, mode transport, compress bool) {
+	status := StatusInternalError
+	var written int32
+	defer func() {
+		if recover() != nil {
+			status = StatusInternalError
+			written = 0
+		}
+		call.SetI64(0, packResult(status, written))
+	}()
+
+	operation := parseRequest(call, mode, compress)
+	status, written = p.execute(caller, operation, compress)
+}
+
+func packResult(status Status, written int32) int64 {
+	if status != StatusOK {
+		written = 0
+	}
+	if written < 0 {
+		status = StatusInternalError
+		written = 0
+	}
+	return int64(uint64(uint32(status)) | uint64(uint32(written))<<32)
 }
 
 func (p *Plugin) execute(caller wago.Caller, operation request, compress bool) (Status, int32) {

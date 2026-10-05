@@ -37,7 +37,18 @@ Every module exports:
 abi_version() -> i32
 ```
 
-and returns `(status: i32, written: i32)` from each codec operation.
+The original `compress` and `decompress` operations return
+`(status: i32, written: i32)`. ABI v1 also exposes single-result
+`compress_packed` and `decompress_packed` forms with identical parameters:
+
+```text
+packed_result:i64 = (uint64(written) << 32) | uint32(status)
+```
+
+The low 32 bits are the status and the high 32 bits are the unsigned byte
+count. Every nonzero status has a zero high half. The 64 MiB hard output limit
+keeps every successful byte count representable in 32 bits. The packed forms
+are additive: the legacy functions and `abi_version() == 1` are unchanged.
 
 ### `gzip.wasm32`
 
@@ -46,6 +57,10 @@ compress(src: i32, src_len: i32, dst: i32, dst_cap: i32, level: i32)
   -> (status: i32, written: i32)
 decompress(src: i32, src_len: i32, dst: i32, dst_cap: i32)
   -> (status: i32, written: i32)
+compress_packed(src: i32, src_len: i32, dst: i32, dst_cap: i32, level: i32)
+  -> packed_result:i64
+decompress_packed(src: i32, src_len: i32, dst: i32, dst_cap: i32)
+  -> packed_result:i64
 ```
 
 Offsets and lengths are unsigned `i32` values in the guest's first 32-bit
@@ -58,6 +73,10 @@ compress(src: i64, src_len: i64, dst: i64, dst_cap: i64, level: i32)
   -> (status: i32, written: i32)
 decompress(src: i64, src_len: i64, dst: i64, dst_cap: i64)
   -> (status: i32, written: i32)
+compress_packed(src: i64, src_len: i64, dst: i64, dst_cap: i64, level: i32)
+  -> packed_result:i64
+decompress_packed(src: i64, src_len: i64, dst: i64, dst_cap: i64)
+  -> packed_result:i64
 ```
 
 Offsets and lengths are unsigned `i64` values in the guest's first 64-bit
@@ -72,6 +91,12 @@ compress(src: anyref, src_off: i32, src_len: i32,
 decompress(src: anyref, src_off: i32, src_len: i32,
            dst: anyref, dst_off: i32, dst_cap: i32)
   -> (status: i32, written: i32)
+compress_packed(src: anyref, src_off: i32, src_len: i32,
+                dst: anyref, dst_off: i32, dst_cap: i32, level: i32)
+  -> packed_result:i64
+decompress_packed(src: anyref, src_off: i32, src_len: i32,
+                  dst: anyref, dst_off: i32, dst_cap: i32)
+  -> packed_result:i64
 ```
 
 References must select packed `array i8` objects. The source may be mutable or
@@ -179,13 +204,13 @@ WasmGC-type checks for all three plugin namespaces. This qualifies a
 WAT fixtures.
 
 TinyGo-produced guests have a narrower, separately tested scope. TinyGo 0.42.0
-offers Wasm32 targets only. A generated Wasm32 guest successfully imports and
-executes the single-result `abi_version` function, but TinyGo rejects the
-two-result `compress` and `decompress` imports with `too many return values`.
-It has no Wasm64 or WasmGC output target. CI asserts each limitation explicitly,
-so guest compilation is neither mistaken for host qualification nor silently
-skipped. A future guest-compatible ABI extension could add single-result packed
-status/written entry points without changing the current common ABI.
+offers Wasm32 targets only. A real guest built with TinyGo 0.42.0 and Go 1.27.1
+imports the single-result packed functions and executes roundtrip, empty,
+overlap, output-small, bounds, checksum, truncation, and invalid-level cases in
+both Go-compiled and TinyGo-compiled Wago hosts. TinyGo still rejects the
+legacy two-result imports with `too many return values`, and it has no Wasm64
+or WasmGC output target. CI asserts those remaining compiler limitations
+explicitly.
 
 ## License
 

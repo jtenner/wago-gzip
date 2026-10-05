@@ -41,5 +41,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lld
       - name: Verify TinyGo-produced guest scope
         run: ./scripts/verify-tinygo-guests.sh
+      - name: Execute TinyGo-produced packed guest in Go host
+        run: go test -v -tags=tinygo_qualification -run '^TestTinyGoProducedWasm32PackedGuest$' .
       - name: Execute codec and every ABI in a TinyGo host
         run: tinygo test -v -scheduler=tasks -p=2 -tags=tinygo_qualification ./...
